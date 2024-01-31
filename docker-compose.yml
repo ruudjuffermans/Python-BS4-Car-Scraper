@@ -1,0 +1,69 @@
+version: "3"
+
+services:
+  scraper:
+    build: ./scraper
+    container_name: app
+    restart: always
+    tty: true
+    links:
+      - db
+      - mongodb
+    networks:
+      - backend
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    hostname: mongodb
+    networks:
+      - backend
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - 27017:27017
+  mongoclient:
+    image: mongoclient/mongoclient:latest
+    container_name: mongoclient
+    hostname: mongoclient
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+    ports:
+      - 3300:3000
+  db:
+    build: ./mysql
+    container_name: db
+    # env_file: ./mysql/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: store
+      MYSQL_USER: manager
+      MYSQL_PASSWORD: manager
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/shared:/usr/local/shared
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+    networks:
+      - backend
+
+volumes:
+  db_data:
+  mongo_data:
+networks:
+  backend:

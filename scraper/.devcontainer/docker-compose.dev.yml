@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  scraper:
+    build: ./scraper
+    container_name: app-dev
+    restart: always
+    tty: true
+    links:
+      - db
+    networks:
+      - backend
+    volumes:
+      - ./app:/workspace:cached
